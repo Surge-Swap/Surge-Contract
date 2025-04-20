@@ -16,6 +16,15 @@ pub struct UpdateVolatility<'info> {
     pub price_update: Account<'info, PriceUpdateV2>,
 }
 
+#[event]
+pub struct VolatilityUpdated {
+    pub current_price: u64,
+    pub mean: f64,
+    pub m2: f64,
+    pub count: u64,
+    pub annualized_volatility: f64,
+}
+
 impl UpdateVolatility<'_> {
     pub fn update_volatility(ctx: Context<UpdateVolatility>) -> Result<()> {
         let stats = &mut ctx.accounts.volatility_stats;
@@ -73,6 +82,14 @@ impl UpdateVolatility<'_> {
             Some(new_count),
             Some(new_annualized_volatility),
         );
+
+        emit!(VolatilityUpdated {
+            current_price,
+            mean: new_mean,
+            m2: new_m2,
+            count: new_count,
+            annualized_volatility: new_annualized_volatility,
+        });
 
         Ok(())
     }
