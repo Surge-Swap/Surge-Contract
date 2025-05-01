@@ -7,6 +7,8 @@ use crate::{errors::OracleError, state::VolatilityStats};
 pub struct UpdateVolatility<'info> {
     #[account(
         mut,
+        seeds = [b"volatility_stats"],
+        bump,     
         has_one = authority,
     )]
     pub volatility_stats: Account<'info, VolatilityStats>,
@@ -29,10 +31,10 @@ impl UpdateVolatility<'_> {
     pub fn update_volatility(ctx: Context<UpdateVolatility>) -> Result<()> {
         let stats = &mut ctx.accounts.volatility_stats;
         let price_update = &ctx.accounts.price_update;
-        let max_age = 30;
+        let max_age = 3600;
 
         let feed_id: [u8; 32] =
-            get_feed_id_from_hex("7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE")?;
+            get_feed_id_from_hex("ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d")?;
         let price = price_update
             .get_price_no_older_than(&Clock::get()?, max_age, &feed_id)
             .map_err(|_| error!(OracleError::NoPriceAvailable))?;

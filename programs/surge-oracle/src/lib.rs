@@ -7,7 +7,7 @@ use anchor_lang::prelude::*;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("8FRkaFSv9xwcrTE7noxzFkWQbVr7A4DUeUCb8CzdtrMS");
+declare_id!("Dt3xxWhMg9RSvYyWwekqyU1jG7v7JKomMZ9seDPZU4L1");
 
 #[program]
 pub mod surge_oracle {

@@ -6,7 +6,9 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = authority,
-        space = VolatilityStats::SIZE
+        space = VolatilityStats::SIZE,
+        seeds = [b"volatility_stats"],
+        bump,
     )]
     pub volatility_stats: Account<'info, VolatilityStats>,
 
