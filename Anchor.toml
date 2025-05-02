@@ -5,10 +5,11 @@ package_manager = "yarn"
 resolution = true
 skip-lint = false
 
-[programs.localnet]
+[programs.devnet]
+surge-variance = "5HEivNreiuWazK2wtLQTxsaT31rEsVcSJCpMiTSzMy77"
 surge_oracle = "Dt3xxWhMg9RSvYyWwekqyU1jG7v7JKomMZ9seDPZU4L1"
 
-[programs.devnet]
+[programs.localnet]
 surge_oracle = "Dt3xxWhMg9RSvYyWwekqyU1jG7v7JKomMZ9seDPZU4L1"
 
 [registry]
