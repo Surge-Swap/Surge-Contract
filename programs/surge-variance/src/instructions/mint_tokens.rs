@@ -1,5 +1,6 @@
 use crate::errors::ErrorCode;
 use crate::state::*;
+use crate::events::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
@@ -101,6 +102,15 @@ impl<'info> MintTokens<'info> {
             .total_deposits
             .checked_add(amount)
             .ok_or(ErrorCode::NumberOverflow)?;
+
+        // Emit tokens minted event
+        emit!(TokensMinted {
+            market: market.key(),
+            user: ctx.accounts.user_authority.key(),
+            amount,
+            is_long,
+            total_deposits: market.total_deposits,
+        });
 
         Ok(())
     }

@@ -1,5 +1,6 @@
 use crate::errors::ErrorCode;
 use crate::state::*;
+use crate::events::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
@@ -151,6 +152,17 @@ impl<'info> Redeem<'info> {
             ),
             ctx.accounts.user_var_short.amount,
         )?;
+
+        // Emit market redeemed event
+        emit!(MarketRedeemed {
+            market: market.key(),
+            user: ctx.accounts.user_authority.key(),
+            realized_variance,
+            strike,
+            long_payout,
+            short_payout,
+            total_deposits: total_supply,
+        });
 
         Ok(())
     }

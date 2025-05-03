@@ -1,4 +1,5 @@
 use crate::state::*;
+use crate::events::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount};
 
@@ -98,6 +99,19 @@ impl<'info> InitializeMarket<'info> {
             token::spl_token::instruction::AuthorityType::MintTokens,
             Some(market.key()),
         )?;
+
+        // Emit market initialized event
+        emit!(MarketInitialized {
+            market: market.key(),
+            authority: market.authority,
+            usdc_vault: market.usdc_vault,
+            var_long_mint: market.var_long_mint,
+            var_short_mint: market.var_short_mint,
+            epoch: market.epoch,
+            strike: market.strike,
+            timestamp: market.timestamp,
+            start_volatility: market.start_volatility,
+        });
 
         Ok(())
     }

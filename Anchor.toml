@@ -6,11 +6,11 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-surge-variance = "5HEivNreiuWazK2wtLQTxsaT31rEsVcSJCpMiTSzMy77"
+surge-variance = "4aL6kUNn43DEwEdUvcjrDrofZwJNPYcfPZqoTZfg2BSk"
 surge_oracle = "Dt3xxWhMg9RSvYyWwekqyU1jG7v7JKomMZ9seDPZU4L1"
 
 [programs.localnet]
-surge-variance = "5HEivNreiuWazK2wtLQTxsaT31rEsVcSJCpMiTSzMy77"
+surge-variance = "4aL6kUNn43DEwEdUvcjrDrofZwJNPYcfPZqoTZfg2BSk"
 surge_oracle = "Dt3xxWhMg9RSvYyWwekqyU1jG7v7JKomMZ9seDPZU4L1"
 
 [registry]

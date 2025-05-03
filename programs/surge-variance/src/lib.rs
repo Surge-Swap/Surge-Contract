@@ -1,13 +1,15 @@
 pub mod errors;
 pub mod instructions;
 pub mod state;
+pub mod events;
 
 use anchor_lang::prelude::*;
 
 pub use instructions::*;
 pub use state::*;
+pub use events::*;
 
-declare_id!("5HEivNreiuWazK2wtLQTxsaT31rEsVcSJCpMiTSzMy77");
+declare_id!("4aL6kUNn43DEwEdUvcjrDrofZwJNPYcfPZqoTZfg2BSk");
 
 #[program]
 pub mod surge_variance {
