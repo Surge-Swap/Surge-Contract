@@ -4,9 +4,17 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(amount: u64, is_long: bool)]
+#[instruction(amount: u64, is_long: bool, epoch: u64, timestamp: i64, bumps: MarketBumps)]
 pub struct MintTokens<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [
+            b"market", 
+            &epoch.to_le_bytes()[..],
+            &timestamp.to_le_bytes()[..],
+        ],
+        bump
+    )]
     pub market: Account<'info, Market>,
 
     pub user_authority: Signer<'info>,
@@ -33,7 +41,7 @@ pub struct MintTokens<'info> {
 }
 
 impl<'info> MintTokens<'info> {
-    pub fn mint_tokens(ctx: Context<MintTokens>, amount: u64, is_long: bool) -> Result<()> {
+    pub fn mint_tokens(ctx: Context<MintTokens>, amount: u64, is_long: bool, epoch: u64, timestamp: i64, bumps: MarketBumps) -> Result<()> {
         let market = &mut ctx.accounts.market;
         require!(!market.is_expired, ErrorCode::MarketExpired);
 
@@ -51,7 +59,14 @@ impl<'info> MintTokens<'info> {
         )?;
 
         // Mint VAR tokens to user
-        let seeds = &[b"market".as_ref(), &[market.bumps.market]];
+        let epoch_bytes = epoch.to_le_bytes();
+        let timestamp_bytes = timestamp.to_le_bytes();
+        let seeds = &[
+            b"market".as_ref(), 
+            &epoch_bytes[..],
+            &timestamp_bytes[..],
+            &[bumps.market]
+        ];
         let signer = &[&seeds[..]];
 
         if is_long {

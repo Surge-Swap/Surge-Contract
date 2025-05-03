@@ -4,8 +4,17 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 #[derive(Accounts)]
+#[instruction(epoch: u64, timestamp: i64, bumps: MarketBumps)]
 pub struct Redeem<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [
+            b"market", 
+            &epoch.to_le_bytes()[..],
+            &timestamp.to_le_bytes()[..],
+        ],
+        bump 
+    )]
     pub market: Account<'info, Market>,
 
     pub user_authority: Signer<'info>,
@@ -29,22 +38,32 @@ pub struct Redeem<'info> {
     pub user_var_short: Account<'info, TokenAccount>,
 
     /// The volatility stats account from the oracle program
-    /// CHECK: This account is actually a VolatilityStats account from the oracle program
-    pub volatility_stats: Account<'info, VolatilityStats>,
+    /// CHECK: This account is not owned by this program, but we read from it
+    pub volatility_stats: AccountInfo<'info>,
 
     pub token_program: Program<'info, Token>,
 }
 
 impl<'info> Redeem<'info> {
-    pub fn redeem(ctx: Context<Redeem>) -> Result<()> {
+    pub fn redeem(ctx: Context<Redeem>, epoch: u64, timestamp: i64, bumps: MarketBumps) -> Result<()> {
         let market = &mut ctx.accounts.market;
         require!(!market.is_expired, ErrorCode::MarketExpired);
 
-        // Get realized variance from the volatility oracle
-        let volatility_stats = &ctx.accounts.volatility_stats;
-        let realized_variance = ((volatility_stats.annualized_volatility * 100.0) as u64)
-            .checked_sub((market.start_volatility * 100.0) as u64)
-            .ok_or(ErrorCode::NumberOverflow)?;
+        // Get the annualized_volatility from the volatility_stats account
+        let data = ctx.accounts.volatility_stats.try_borrow_data()?;
+        if data.len() < 8 + 32 + 8 + 8 + 8 + 8 + 8 {
+            return Err(ProgramError::InvalidAccountData.into());
+        }
+        
+        let start_index = 8 + 32 + 8 + 8 + 8 + 8; // Offset to get to annualized_volatility
+        let annualized_volatility_bytes = &data[start_index..start_index + 8];
+        let annualized_volatility = f64::from_le_bytes(annualized_volatility_bytes.try_into().unwrap());
+
+        // Calculate realized variance from the volatility
+        let realized_variance = (annualized_volatility * 100.0) - (market.start_volatility * 100.0);
+        if realized_variance < 0.0 {
+            return Err(ErrorCode::NumberOverflow.into());
+        }
 
         market.realized_variance = realized_variance;
         market.is_expired = true;
@@ -54,11 +73,9 @@ impl<'info> Redeem<'info> {
         let strike = market.strike;
 
         let long_payout = if realized_variance > strike {
-            ((realized_variance - strike) as u128)
-                .checked_mul(total_supply as u128)
-                .ok_or(ErrorCode::NumberOverflow)?
-                .checked_div(100)
-                .ok_or(ErrorCode::NumberOverflow)?
+            let variance_diff = realized_variance - strike;
+            let scaled_diff = (variance_diff * (total_supply as f64) / 100.0) as u128;
+            scaled_diff
         } else {
             0
         };
@@ -69,8 +86,15 @@ impl<'info> Redeem<'info> {
             .checked_sub(long_payout)
             .ok_or(ErrorCode::NumberOverflow)?;
 
-        // Transfer payouts
-        let seeds = &[b"market".as_ref(), &[market.bumps.market]];
+        // Transfer payouts using the seeds for PDA signing
+        let epoch_bytes = epoch.to_le_bytes();
+        let timestamp_bytes = timestamp.to_le_bytes();
+        let seeds = &[
+            b"market".as_ref(), 
+            &epoch_bytes[..],
+            &timestamp_bytes[..],
+            &[bumps.market]
+        ];
         let signer = &[&seeds[..]];
 
         if long_payout > 0 {

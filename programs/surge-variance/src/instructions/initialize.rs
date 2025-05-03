@@ -3,13 +3,17 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount};
 
 #[derive(Accounts)]
-#[instruction(epoch: u64, strike: u64, bumps: MarketBumps)]
+#[instruction(epoch: u64, strike: f64, timestamp: i64, bumps: MarketBumps)]
 pub struct InitializeMarket<'info> {
     #[account(
         init,
         payer = authority,
-        space = 8 + 32 + 32 + 32 + 32 + 32 + 32 + 8 + 1 + 8 + 8 + 8 + 1 + 1 + 8,
-        seeds = [b"market"],
+        space = 8 + 32 + 32 + 32 + 32 + 32 + 32 + 8 + 8 + 1 + 8 + 8 + 8 + 1 + 1 + 8,
+        seeds = [
+            b"market", 
+            &epoch.to_le_bytes()[..],
+            &timestamp.to_le_bytes()[..],
+        ],
         bump
     )]
     pub market: Account<'info, Market>,
@@ -27,7 +31,8 @@ pub struct InitializeMarket<'info> {
     pub var_short_mint: Account<'info, Mint>,
 
     /// The volatility stats account from the oracle program
-    pub volatility_stats: Account<'info, VolatilityStats>,
+    /// CHECK: This account is not owned by this program, but we read from it
+    pub volatility_stats: AccountInfo<'info>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -37,7 +42,8 @@ impl<'info> InitializeMarket<'info> {
     pub fn initialize_market(
         ctx: Context<InitializeMarket>,
         epoch: u64,
-        strike: u64,
+        strike: f64,
+        timestamp: i64,
         bumps: MarketBumps,
     ) -> Result<()> {
         let market = &mut ctx.accounts.market;
@@ -45,6 +51,7 @@ impl<'info> InitializeMarket<'info> {
         // Initialize market state
         market.epoch = epoch;
         market.strike = strike;
+        market.timestamp = timestamp;
         market.authority = ctx.accounts.authority.key();
         market.usdc_vault = ctx.accounts.usdc_vault.key();
         market.var_long_mint = ctx.accounts.var_long_mint.key();
@@ -54,7 +61,18 @@ impl<'info> InitializeMarket<'info> {
         market.is_initialized = true;
         market.is_expired = false;
         market.total_deposits = 0;
-        market.start_volatility = ctx.accounts.volatility_stats.annualized_volatility;
+        
+        // Get the annualized_volatility from the volatility_stats account
+        let data = ctx.accounts.volatility_stats.try_borrow_data()?;
+        if data.len() < 8 + 32 + 8 + 8 + 8 + 8 + 8 {
+            return Err(ProgramError::InvalidAccountData.into());
+        }
+        
+        let start_index = 8 + 32 + 8 + 8 + 8 + 8; // Offset to get to annualized_volatility
+        let annualized_volatility_bytes = &data[start_index..start_index + 8];
+        let annualized_volatility = f64::from_le_bytes(annualized_volatility_bytes.try_into().unwrap());
+        
+        market.start_volatility = annualized_volatility;
 
         // Transfer authority of the mints to the PDA
         token::set_authority(
