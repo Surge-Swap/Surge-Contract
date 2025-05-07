@@ -6,6 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
+surge-perps = "3gZPZnYVM8BT25H9VJUX48jqdP56J5yLoAwzz93i7uRt"
 surge-variance = "4aL6kUNn43DEwEdUvcjrDrofZwJNPYcfPZqoTZfg2BSk"
 surge_oracle = "Dt3xxWhMg9RSvYyWwekqyU1jG7v7JKomMZ9seDPZU4L1"
 
