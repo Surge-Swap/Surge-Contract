@@ -6,7 +6,8 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-surge-perps = "3gZPZnYVM8BT25H9VJUX48jqdP56J5yLoAwzz93i7uRt"
+init-synthetic-mint = "DAKgPKAACee7xo35UmSBKJhmjgAHXFoSMGKTSxco7WDw"
+surge-perps = "GjMYNFqnZbAVoUoKxsYSaexT3AnXmHz1m8nMjH9Wxmdu"
 surge-variance = "4aL6kUNn43DEwEdUvcjrDrofZwJNPYcfPZqoTZfg2BSk"
 surge_oracle = "Dt3xxWhMg9RSvYyWwekqyU1jG7v7JKomMZ9seDPZU4L1"
 
@@ -23,3 +24,7 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+init_synthetic_mint = "ts-node -r ts-node/register scripts/init_synthetic_mint.ts"
+open_long_100 = "ts-node scripts/open_long_100.ts"
+close_position = "ts-node scripts/close_position.ts"
+

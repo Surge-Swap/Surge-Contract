@@ -10,4 +10,12 @@ pub enum PerpError {
     BadMargin,
     #[msg("Oracle stale / unavailable")]
     OracleStale,
+    #[msg("Invalid vault. The provided vault does not match the configured vault.")]
+    InvalidVault,
+    #[msg("Insufficient tokens to burn")]
+    InsufficientTokens,
+    #[msg("Insufficient vault balance")]
+    InsufficientVaultBalance,
+    #[msg("Position already active")]
+    PositionAlreadyExists,
 }

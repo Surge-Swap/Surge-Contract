@@ -9,7 +9,7 @@ pub use instructions::*;
 pub use state::*;
 pub use events::*;
 
-declare_id!("3gZPZnYVM8BT25H9VJUX48jqdP56J5yLoAwzz93i7uRt");
+declare_id!("GjMYNFqnZbAVoUoKxsYSaexT3AnXmHz1m8nMjH9Wxmdu");
 
 #[program]
 pub mod surge_perps {
@@ -25,7 +25,20 @@ pub mod surge_perps {
 
     pub fn close_position(
         ctx: Context<ClosePosition>,
+        check_token_balance: bool,
     ) -> Result<()> {
-        ClosePosition::close_position(ctx)
+        ClosePosition::close_position(ctx, check_token_balance)
+    }
+
+    pub fn init_synthetic_mint(
+        ctx: Context<InitSyntheticMint>,
+    ) -> Result<()> {
+        InitSyntheticMint::init_synthetic_mint(ctx)
+    }
+
+    pub fn set_vault(
+        ctx: Context<SetVault>,
+    ) -> Result<()> {
+        SetVault::set_vault(ctx)
     }
 } 
